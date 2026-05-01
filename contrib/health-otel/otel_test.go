@@ -15,7 +15,7 @@ type fakeChecker struct {
 	res  health.Result
 }
 
-func (f *fakeChecker) Name() string                         { return f.name }
+func (f *fakeChecker) Name() string                          { return f.name }
 func (f *fakeChecker) Check(_ context.Context) health.Result { return f.res }
 
 func TestRegister_EmitsSpanPerCheck(t *testing.T) {

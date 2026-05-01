@@ -16,7 +16,7 @@ type fakeChecker struct {
 	res  health.Result
 }
 
-func (f *fakeChecker) Name() string                         { return f.name }
+func (f *fakeChecker) Name() string                          { return f.name }
 func (f *fakeChecker) Check(_ context.Context) health.Result { return f.res }
 
 func newReadyReg(t *testing.T) *health.Registry {
@@ -39,6 +39,9 @@ func TestMount_DefaultPaths(t *testing.T) {
 
 	for _, path := range []string{"/healthz", "/readyz", "/startupz"} {
 		resp, err := http.Get(srv.URL + path)
+		if err != nil {
+			t.Fatalf("GET: %v", err)
+		}
 		if err != nil {
 			t.Fatalf("GET %s: %v", path, err)
 		}
@@ -93,7 +96,10 @@ func TestMount_OverridePaths(t *testing.T) {
 	Mount(e, reg, WithReadinessPath("/ready"))
 	srv := httptest.NewServer(e)
 	defer srv.Close()
-	resp, _ := http.Get(srv.URL + "/ready")
+	resp, err := http.Get(srv.URL + "/ready")
+	if err != nil {
+		t.Fatalf("GET: %v", err)
+	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusNotFound {
 		t.Errorf("custom /ready: 404")
