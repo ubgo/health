@@ -8,10 +8,10 @@ import (
 
 // Snapshot is the aggregate state of a probe at a point in time.
 type Snapshot struct {
-	Probe   Probe             `json:"probe"`
-	Status  Status            `json:"status"`
-	Time    time.Time         `json:"time"`
-	Checks  map[string]Result `json:"checks"`
+	Probe  Probe             `json:"probe"`
+	Status Status            `json:"status"`
+	Time   time.Time         `json:"time"`
+	Checks map[string]Result `json:"checks"`
 }
 
 // SnapshotForProbe returns the registry's state aggregated for the given

@@ -15,8 +15,8 @@ type fakeChecker struct {
 	fn   func(ctx context.Context) Result
 }
 
-func (f *fakeChecker) Name() string                       { return f.name }
-func (f *fakeChecker) Check(ctx context.Context) Result   { return f.fn(ctx) }
+func (f *fakeChecker) Name() string                     { return f.name }
+func (f *fakeChecker) Check(ctx context.Context) Result { return f.fn(ctx) }
 
 func upChecker(name string) *fakeChecker {
 	return &fakeChecker{
@@ -180,6 +180,7 @@ func TestRegistry_StartStop_BackgroundLoop(t *testing.T) {
 }
 
 func TestRegistry_Stop_IsIdempotent(t *testing.T) {
+	t.Helper()
 	reg := NewRegistry()
 	reg.Stop() // never started — must not panic
 	reg.Start(context.Background(), 0)
@@ -188,6 +189,7 @@ func TestRegistry_Stop_IsIdempotent(t *testing.T) {
 }
 
 func TestRegistry_Concurrent_RegisterRunSubscribe(t *testing.T) {
+	t.Helper()
 	reg := NewRegistry()
 	var wg sync.WaitGroup
 	for i := 0; i < 50; i++ {

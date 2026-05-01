@@ -17,14 +17,7 @@ jobs:
       matrix:
         module:
           - .
-          - contrib/buildinfo-nethttp
-          - contrib/buildinfo-slog
-          - contrib/buildinfo-zap
-          - contrib/buildinfo-otel
-          - contrib/buildinfo-gin
-          - contrib/buildinfo-chi
-          - contrib/buildinfo-echo
-          - contrib/buildinfo-fiber
+          # contrib/* modules will be added here as they ship.
     steps:
       - uses: actions/checkout@v6
 

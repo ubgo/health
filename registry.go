@@ -3,7 +3,6 @@ package health
 import (
 	"context"
 	"errors"
-	"sort"
 	"sync"
 	"time"
 )
@@ -238,19 +237,6 @@ func (r *Registry) Stop() {
 	if done != nil {
 		<-done
 	}
-}
-
-// names returns the registered checker names in alphabetical order so
-// snapshot iteration is deterministic.
-func (r *Registry) names() []string {
-	r.mu.RLock()
-	out := make([]string, 0, len(r.checkers))
-	for n := range r.checkers {
-		out = append(out, n)
-	}
-	r.mu.RUnlock()
-	sort.Strings(out)
-	return out
 }
 
 // markStartupSeen flips startupSeen to true on the first Up readiness snapshot.

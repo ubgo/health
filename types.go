@@ -24,14 +24,14 @@ const (
 type Severity string
 
 const (
-	// SeverityCritical: a Down result fails the readiness probe. Default for
-	// most production dependencies (DB, cache, etc.).
+	// SeverityCritical means a Down result fails the readiness probe.
+	// Default for most production dependencies (DB, cache, primary message broker).
 	SeverityCritical Severity = "critical"
-	// SeverityDegraded: a Down result is reported in the snapshot but the
+	// SeverityDegraded means a Down result is reported in the snapshot but the
 	// readiness probe still returns up. Use for dependencies whose absence
 	// degrades but does not break the service (e.g. an email provider).
 	SeverityDegraded Severity = "degraded"
-	// SeverityInfo: a Down result is reported but never affects either
+	// SeverityInfo means a Down result is reported but never affects either
 	// liveness or readiness. Use for purely informational checks.
 	SeverityInfo Severity = "info"
 )
