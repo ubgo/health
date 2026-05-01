@@ -1,0 +1,6 @@
+go 1.24
+
+use (
+	.
+	// contrib/* modules are added here as they ship.
+)

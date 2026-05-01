@@ -1,0 +1,69 @@
+version: '3'
+
+# Reusable command runner for the ubgo/health repo.
+# Run `task --list` to see all available tasks.
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
+
+  test:
+    desc: Run all tests across all modules
+    cmds:
+      - go test ./...
+
+  test:race:
+    desc: Run all tests with the race detector
+    cmds:
+      - go test -race ./...
+
+  test:coverage:
+    desc: Run all tests with a coverage report
+    cmds:
+      - go test -race -coverprofile=cover.out ./...
+      - go tool cover -html=cover.out -o cover.html
+      - echo "Coverage report written to cover.html"
+
+  vet:
+    desc: Run go vet across all modules
+    cmds:
+      - go vet ./...
+
+  lint:
+    desc: Run golangci-lint across all modules
+    cmds:
+      - golangci-lint run ./...
+
+  tidy:
+    desc: Run go mod tidy on every module in the repo
+    cmds:
+      - find . -name go.mod -execdir go mod tidy \;
+
+  zero-dep-check:
+    desc: Verify the core module has zero non-stdlib dependencies
+    cmds:
+      - |
+        if grep -E '^require\s+[^(]' go.mod | grep -v 'github.com/ubgo'; then
+          echo "health core has 3rd-party deps — forbidden"
+          exit 1
+        fi
+        echo "ok: zero non-stdlib deps in core"
+
+  build:
+    desc: Build all modules to ensure they compile
+    cmds:
+      - go build ./...
+
+  ci:
+    desc: Run the full local CI suite (vet + race tests + zero-dep check)
+    cmds:
+      - task: vet
+      - task: test:race
+      - task: zero-dep-check
+
+  clean:
+    desc: Remove build artifacts and coverage reports
+    cmds:
+      - rm -f cover.out cover.html
