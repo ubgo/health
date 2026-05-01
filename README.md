@@ -4,6 +4,56 @@ Thread-safe registry for runtime health and readiness checks of dependencies (da
 
 Zero third-party dependencies in the core. HTTP framework adapters (stdlib `net/http`, Gin, Chi, Echo, Fiber), observability adapters (OpenTelemetry, Prometheus), and concrete checkers (Postgres, Redis, NATS, generic HTTP probe, DNS) ship as separate modules under `contrib/`.
 
+## How the pieces fit together
+
+A real `ubgo/health` deployment has three kinds of components, each playing a different role around the central `Registry`:
+
+```
+                        ┌──────────────────────────────────────┐
+                        │              YOUR SERVICE             │
+                        │                                      │
+   PING ─→  [Redis]  ─→ │  ┌─────────────────────────────────┐ │
+                        │  │  CHECKER  (health-redis)        │ │   ← writes Result to registry
+                        │  │  Result{Up, latency=2ms}        │ │
+                        │  └────────────┬────────────────────┘ │
+                        │               ▼                      │
+                        │  ┌─────────────────────────────────┐ │
+                        │  │  health.Registry                │ │   ← stores per-checker state
+                        │  │  ├─ db:    Up                   │ │
+                        │  │  ├─ cache: Up                   │ │
+                        │  │  └─ nats:  Down                 │ │
+                        │  └────┬───────────────────┬────────┘ │
+                        │       │                   │          │
+                        │       ▼                   ▼          │
+                        │  ┌─────────────┐    ┌─────────────┐  │
+                        │  │  RENDERER   │    │  OBSERVER   │  │   ← consume snapshots
+                        │  │  health-gin │    │ health-otel │  │
+                        │  │  /readyz    │    │ emit spans  │  │
+                        │  └──────┬──────┘    └──────┬──────┘  │
+                        └─────────┼──────────────────┼─────────┘
+                                  ▼                  ▼
+                              k8s probe        OTEL collector
+                              load balancer    Prom scrape
+                              curl
+```
+
+| Role | Examples | What they do |
+|------|----------|--------------|
+| **Checker** *(writes to registry)* | [`health-postgres`](./contrib/health-postgres), [`health-redis`](./contrib/health-redis), [`health-nats`](./contrib/health-nats), [`health-httpprobe`](./contrib/health-httpprobe), [`health-dns`](./contrib/health-dns) | Ping a real dependency over the network. Implement `health.Checker`. |
+| **Renderer** *(reads from registry)* | [`health-nethttp`](./contrib/health-nethttp), [`health-gin`](./contrib/health-gin), [`health-chi`](./contrib/health-chi), [`health-echo`](./contrib/health-echo), [`health-fiber`](./contrib/health-fiber) | Take the registry snapshot and expose `/healthz` / `/readyz` / `/startupz` as HTTP. No I/O against dependencies. |
+| **Observer** *(subscribes to registry, async)* | [`health-otel`](./contrib/health-otel), [`health-prom`](./contrib/health-prom) | React to every check result — emit a span, increment a counter. No HTTP exposure of their own. |
+| **Core** *(the registry itself)* | [`github.com/ubgo/health`](https://github.com/ubgo/health) | Stores results, aggregates probes, fires observers. Stdlib only, no third-party deps. |
+
+A typical service wires **one or more checkers + one renderer + zero or more observers**:
+
+```go
+reg := health.NewRegistry()
+reg.Register(healthredis.New("cache", redisClient))     // CHECKER
+reg.Register(healthpostgres.New("db",  pgxPool))        // CHECKER
+healthotel.Register(reg)                                // OBSERVER
+healthgin.Mount(r, reg)                                 // RENDERER
+```
+
 ## Install
 
 ```sh

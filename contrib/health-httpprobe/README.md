@@ -1,5 +1,7 @@
 # health-httpprobe
 
+> **Role: Checker.** This adapter **writes** to the registry by pinging a real dependency over the network. Renderers (`health-nethttp`, `health-gin`, `health-chi`, `health-echo`, `health-fiber`) then expose the result over HTTP. See the [system diagram](https://github.com/ubgo/health#how-the-pieces-fit-together) for the full flow.
+
 Generic outbound HTTP probe for [`github.com/ubgo/health`](https://github.com/ubgo/health) — implements `health.Checker` by issuing a GET to a configured URL and accepting any 2xx/3xx response.
 
 Zero third-party dependencies (stdlib `net/http` only).

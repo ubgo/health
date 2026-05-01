@@ -1,5 +1,7 @@
 # health-redis
 
+> **Role: Checker.** This adapter **writes** to the registry by pinging a real dependency over the network. Renderers (`health-nethttp`, `health-gin`, `health-chi`, `health-echo`, `health-fiber`) then expose the result over HTTP. See the [system diagram](https://github.com/ubgo/health#how-the-pieces-fit-together) for the full flow.
+
 Redis adapter for [`github.com/ubgo/health`](https://github.com/ubgo/health) — implements `health.Checker` by running the Redis `PING` command via go-redis.
 
 ## Install

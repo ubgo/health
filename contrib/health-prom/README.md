@@ -1,5 +1,7 @@
 # health-prom
 
+> **Role: Observer.** This adapter **subscribes** to the registry and reacts to every check result. It does not perform health checks itself and does not expose HTTP endpoints. See the [system diagram](https://github.com/ubgo/health#how-the-pieces-fit-together) for the full flow.
+
 Prometheus adapter for [`github.com/ubgo/health`](https://github.com/ubgo/health) — exposes health checks as Prometheus metrics by subscribing as a `health.Observer`.
 
 ## Install

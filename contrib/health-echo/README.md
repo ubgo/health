@@ -1,5 +1,7 @@
 # health-echo
 
+> **Role: Renderer.** This adapter **reads** the registry snapshot and exposes it over HTTP. It does **not** check any dependency itself — see the [system diagram](https://github.com/ubgo/health#how-the-pieces-fit-together) for how renderers, checkers, and observers fit together.
+
 Echo adapter for [`github.com/ubgo/health`](https://github.com/ubgo/health) — exposes liveness, readiness, and startup probes as `echo.HandlerFunc`s with a `Mount` helper.
 
 ## Install

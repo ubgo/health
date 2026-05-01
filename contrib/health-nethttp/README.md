@@ -1,5 +1,7 @@
 # health-nethttp
 
+> **Role: Renderer.** This adapter **reads** the registry snapshot and exposes it over HTTP. It does **not** check any dependency itself — see the [system diagram](https://github.com/ubgo/health#how-the-pieces-fit-together) for how renderers, checkers, and observers fit together.
+
 Stdlib `net/http` adapter for [`github.com/ubgo/health`](https://github.com/ubgo/health) — exposes liveness, readiness, and startup probes as `http.Handler`s with a `Mount` helper.
 
 Zero third-party dependencies.
