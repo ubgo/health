@@ -4,6 +4,33 @@
 
 NATS adapter for [`github.com/ubgo/health`](https://github.com/ubgo/health) — implements `health.Checker` based on the connection state of a NATS client.
 
+## How it works
+
+```
+                          ┌──────────────────────────────────────┐
+                          │            YOUR SERVICE              │
+                          │                                      │
+                          │  ┌──────────────────┐                │
+   [NATS :4222] ←─────────│  │  health-nats     │                │
+   (long-lived conn)      │  │  (CHECKER)       │                │
+                          │  │ reads conn.Status()                │
+                          │  └────────┬─────────┘                │
+                          │           │ Result{Up | Degraded |   │
+                          │           │         Down, lat}       │
+                          │           ▼                          │
+                          │  ┌──────────────────┐                │
+                          │  │ health.Registry  │                │
+                          │  └────────┬─────────┘                │
+                          │           │ SnapshotForProbe         │
+                          │           ▼                          │
+                          │  ┌──────────────────┐                │
+                          │  │  any RENDERER    │ ── /readyz ──→ │
+                          │  └──────────────────┘                │
+                          └──────────────────────────────────────┘
+```
+
+`RECONNECTING` → `Degraded` (clients buffer publishes locally during reconnect, so service may still function).
+
 ## Install
 
 ```sh

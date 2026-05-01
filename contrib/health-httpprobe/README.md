@@ -6,6 +6,32 @@ Generic outbound HTTP probe for [`github.com/ubgo/health`](https://github.com/ub
 
 Zero third-party dependencies (stdlib `net/http` only).
 
+## How it works
+
+```
+                          ┌──────────────────────────────────────┐
+                          │            YOUR SERVICE              │
+                          │                                      │
+                          │  ┌──────────────────┐                │
+   [https://api.x/health]→│  │ health-httpprobe │                │
+   ←─── status code  ─────│  │  (CHECKER)       │                │
+                          │  │ GET / HEAD via   │                │
+                          │  │ http.Client      │                │
+                          │  └────────┬─────────┘                │
+                          │           │ Result{Up if 2xx/3xx,    │
+                          │           │         else Down, lat}  │
+                          │           ▼                          │
+                          │  ┌──────────────────┐                │
+                          │  │ health.Registry  │                │
+                          │  └────────┬─────────┘                │
+                          │           │ SnapshotForProbe         │
+                          │           ▼                          │
+                          │  ┌──────────────────┐                │
+                          │  │  any RENDERER    │ ── /readyz ──→ │
+                          │  └──────────────────┘                │
+                          └──────────────────────────────────────┘
+```
+
 ## Install
 
 ```sh

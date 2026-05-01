@@ -6,6 +6,34 @@ Stdlib `net/http` adapter for [`github.com/ubgo/health`](https://github.com/ubgo
 
 Zero third-party dependencies.
 
+## How it works
+
+```
+                       ┌──────────────────────────────────────┐
+                       │            YOUR SERVICE              │
+                       │                                      │
+   CHECKERS ─────────→ │  ┌──────────────────┐                │
+   (postgres, redis,   │  │ health.Registry  │                │
+    nats, dns, …)      │  └────────┬─────────┘                │
+                       │           │ SnapshotForProbe(probe)  │
+                       │           ▼                          │
+                       │  ┌──────────────────┐                │
+                       │  │ health-nethttp   │ ←── reads      │
+                       │  │  (RENDERER)      │                │
+                       │  └────────┬─────────┘                │
+                       │           │ http.Handler             │
+                       │           ▼                          │
+                       │  ┌──────────────────┐                │
+                       │  │ http.ServeMux    │                │
+                       │  │   /healthz       │                │
+                       │  │   /readyz        │                │
+                       │  │   /startupz      │                │
+                       │  └────────┬─────────┘                │
+                       └───────────┼──────────────────────────┘
+                                   ▼
+                              k8s probe / load balancer / curl
+```
+
 ## Install
 
 ```sh

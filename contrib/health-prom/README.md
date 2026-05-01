@@ -4,6 +4,36 @@
 
 Prometheus adapter for [`github.com/ubgo/health`](https://github.com/ubgo/health) — exposes health checks as Prometheus metrics by subscribing as a `health.Observer`.
 
+## How it works
+
+```
+                       ┌──────────────────────────────────────┐
+                       │            YOUR SERVICE              │
+                       │                                      │
+   CHECKERS ─────────→ │  ┌──────────────────┐                │
+                       │  │ health.Registry  │ ←──Subscribe──┐│
+                       │  └────────┬─────────┘                │
+                       │           │ fires observer per check │
+                       │           ▼                          │
+                       │  ┌──────────────────┐                │
+                       │  │  health-prom     │                │
+                       │  │  (OBSERVER)      │                │
+                       │  │   updates:                        │
+                       │  │     health_check_status (gauge)    │
+                       │  │     health_check_latency_seconds   │
+                       │  │     health_check_runs_total (ctr)  │
+                       │  └────────┬─────────┘                │
+                       │           │                          │
+                       │           ▼                          │
+                       │  ┌──────────────────┐                │
+                       │  │  promhttp.Handler│ ── /metrics ──→ │
+                       │  └──────────────────┘                │
+                       └──────────────────────────────────────┘
+                                              │
+                                              ▼
+                                        Prometheus scrape
+```
+
 ## Install
 
 ```sh

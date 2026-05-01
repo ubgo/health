@@ -4,6 +4,34 @@
 
 Echo adapter for [`github.com/ubgo/health`](https://github.com/ubgo/health) — exposes liveness, readiness, and startup probes as `echo.HandlerFunc`s with a `Mount` helper.
 
+## How it works
+
+```
+                       ┌──────────────────────────────────────┐
+                       │            YOUR SERVICE              │
+                       │                                      │
+   CHECKERS ─────────→ │  ┌──────────────────┐                │
+   (postgres, redis,   │  │ health.Registry  │                │
+    nats, dns, …)      │  └────────┬─────────┘                │
+                       │           │ SnapshotForProbe(probe)  │
+                       │           ▼                          │
+                       │  ┌──────────────────┐                │
+                       │  │  health-echo     │ ←── reads      │
+                       │  │  (RENDERER)      │                │
+                       │  └────────┬─────────┘                │
+                       │           │ echo.HandlerFunc         │
+                       │           ▼                          │
+                       │  ┌──────────────────┐                │
+                       │  │  echo.Echo       │                │
+                       │  │   /healthz       │                │
+                       │  │   /readyz        │                │
+                       │  │   /startupz      │                │
+                       │  └────────┬─────────┘                │
+                       └───────────┼──────────────────────────┘
+                                   ▼
+                              k8s probe / load balancer / curl
+```
+
 ## Install
 
 ```sh

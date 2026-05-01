@@ -6,6 +6,31 @@ DNS adapter for [`github.com/ubgo/health`](https://github.com/ubgo/health) — i
 
 Zero third-party dependencies (stdlib `net` only).
 
+## How it works
+
+```
+                          ┌──────────────────────────────────────┐
+                          │            YOUR SERVICE              │
+                          │                                      │
+                          │  ┌──────────────────┐                │
+   [DNS resolver  ] ─────→│  │  health-dns      │                │
+   ← A / AAAA records ────│  │  (CHECKER)       │                │
+   (CoreDNS, 8.8.8.8…)    │  │  LookupHost(host)                 │
+                          │  └────────┬─────────┘                │
+                          │           │ Result{Up if ≥minHosts,  │
+                          │           │   Down on err, lat}      │
+                          │           ▼                          │
+                          │  ┌──────────────────┐                │
+                          │  │ health.Registry  │                │
+                          │  └────────┬─────────┘                │
+                          │           │ SnapshotForProbe         │
+                          │           ▼                          │
+                          │  ┌──────────────────┐                │
+                          │  │  any RENDERER    │ ── /readyz ──→ │
+                          │  └──────────────────┘                │
+                          └──────────────────────────────────────┘
+```
+
 ## Install
 
 ```sh

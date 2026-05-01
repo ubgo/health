@@ -4,6 +4,29 @@
 
 Postgres adapter for [`github.com/ubgo/health`](https://github.com/ubgo/health) — implements `health.Checker` for a Postgres connection or pool, using pgx's `Ping` method.
 
+## How it works
+
+```
+                          ┌──────────────────────────────────────┐
+                          │            YOUR SERVICE              │
+                          │                                      │
+                          │  ┌──────────────────┐                │
+   [Postgres :5432] ────→ │  │ health-postgres  │                │
+   ←── pool.Ping result   │  │  (CHECKER)       │                │
+                          │  └────────┬─────────┘                │
+                          │           │ Result{Up | Down, lat}   │
+                          │           ▼                          │
+                          │  ┌──────────────────┐                │
+                          │  │ health.Registry  │                │
+                          │  └────────┬─────────┘                │
+                          │           │ SnapshotForProbe         │
+                          │           ▼                          │
+                          │  ┌──────────────────┐                │
+                          │  │  any RENDERER    │ ── /readyz ──→ │
+                          │  └──────────────────┘                │
+                          └──────────────────────────────────────┘
+```
+
 ## Install
 
 ```sh

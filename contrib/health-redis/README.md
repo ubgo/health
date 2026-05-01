@@ -4,6 +4,29 @@
 
 Redis adapter for [`github.com/ubgo/health`](https://github.com/ubgo/health) — implements `health.Checker` by running the Redis `PING` command via go-redis.
 
+## How it works
+
+```
+                          ┌──────────────────────────────────────┐
+                          │            YOUR SERVICE              │
+                          │                                      │
+                          │  ┌──────────────────┐                │
+   [Redis :6379] ──PING──→│  │  health-redis    │                │
+   ←──────PONG────────────│  │  (CHECKER)       │                │
+                          │  └────────┬─────────┘                │
+                          │           │ Result{Up | Down, lat}   │
+                          │           ▼                          │
+                          │  ┌──────────────────┐                │
+                          │  │ health.Registry  │                │
+                          │  └────────┬─────────┘                │
+                          │           │ SnapshotForProbe         │
+                          │           ▼                          │
+                          │  ┌──────────────────┐                │
+                          │  │  any RENDERER    │ ── /readyz ──→ │
+                          │  └──────────────────┘                │
+                          └──────────────────────────────────────┘
+```
+
 ## Install
 
 ```sh

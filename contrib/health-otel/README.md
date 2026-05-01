@@ -4,6 +4,32 @@
 
 OpenTelemetry adapter for [`github.com/ubgo/health`](https://github.com/ubgo/health) — emits an OTEL span for every check the registry runs by subscribing as a `health.Observer`.
 
+## How it works
+
+```
+                       ┌──────────────────────────────────────┐
+                       │            YOUR SERVICE              │
+                       │                                      │
+   CHECKERS ─────────→ │  ┌──────────────────┐                │
+                       │  │ health.Registry  │ ←──Subscribe──┐│
+                       │  └────────┬─────────┘                │
+                       │           │ fires observer per check │
+                       │           ▼                          │
+                       │  ┌──────────────────┐                │
+                       │  │  health-otel     │                │
+                       │  │  (OBSERVER)      │                │
+                       │  │   tracer.Start("health.check")    │
+                       │  │   span.SetAttributes(             │
+                       │  │     check.name, check.status,     │
+                       │  │     check.severity,               │
+                       │  │     check.latency_ms)             │
+                       │  │   span.End()                      │
+                       │  └────────┬─────────┘                │
+                       └───────────┼──────────────────────────┘
+                                   ▼
+                       OTEL Collector / Jaeger / Tempo / vendor
+```
+
 ## Install
 
 ```sh

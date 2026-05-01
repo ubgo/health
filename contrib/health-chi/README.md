@@ -4,6 +4,34 @@
 
 Chi adapter for [`github.com/ubgo/health`](https://github.com/ubgo/health) — exposes liveness, readiness, and startup probes as stdlib `http.Handler`s with a Chi-native `Mount` helper.
 
+## How it works
+
+```
+                       ┌──────────────────────────────────────┐
+                       │            YOUR SERVICE              │
+                       │                                      │
+   CHECKERS ─────────→ │  ┌──────────────────┐                │
+   (postgres, redis,   │  │ health.Registry  │                │
+    nats, dns, …)      │  └────────┬─────────┘                │
+                       │           │ SnapshotForProbe(probe)  │
+                       │           ▼                          │
+                       │  ┌──────────────────┐                │
+                       │  │  health-chi      │ ←── reads      │
+                       │  │  (RENDERER)      │                │
+                       │  └────────┬─────────┘                │
+                       │           │ http.Handler             │
+                       │           ▼                          │
+                       │  ┌──────────────────┐                │
+                       │  │  chi.Router      │                │
+                       │  │   /healthz       │                │
+                       │  │   /readyz        │                │
+                       │  │   /startupz      │                │
+                       │  └────────┬─────────┘                │
+                       └───────────┼──────────────────────────┘
+                                   ▼
+                              k8s probe / load balancer / curl
+```
+
 ## Install
 
 ```sh
