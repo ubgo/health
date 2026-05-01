@@ -98,11 +98,11 @@ Adapter modules ship as separate Go modules under `contrib/`. Import only the on
 
 | Adapter | Module path |
 |---------|-------------|
-| `health-nethttp` | `github.com/ubgo/health/contrib/health-nethttp` |
-| `health-gin` | `github.com/ubgo/health/contrib/health-gin` |
-| `health-chi` | `github.com/ubgo/health/contrib/health-chi` |
-| `health-echo` | `github.com/ubgo/health/contrib/health-echo` |
-| `health-fiber` | `github.com/ubgo/health/contrib/health-fiber` |
+| [`health-nethttp`](./contrib/health-nethttp) | `github.com/ubgo/health/contrib/health-nethttp` |
+| [`health-gin`](./contrib/health-gin) | `github.com/ubgo/health/contrib/health-gin` |
+| [`health-chi`](./contrib/health-chi) | `github.com/ubgo/health/contrib/health-chi` |
+| [`health-echo`](./contrib/health-echo) | `github.com/ubgo/health/contrib/health-echo` |
+| [`health-fiber`](./contrib/health-fiber) | `github.com/ubgo/health/contrib/health-fiber` |
 
 Each exposes `Liveness`, `Readiness`, `Startup` handlers and a `Mount` helper with `WithMiddleware` / `WithLivenessPath` / `WithReadinessPath` / `WithStartupPath` options.
 
@@ -110,20 +110,20 @@ Each exposes `Liveness`, `Readiness`, `Startup` handlers and a `Mount` helper wi
 
 | Adapter | Module path |
 |---------|-------------|
-| `health-otel` | `github.com/ubgo/health/contrib/health-otel` |
-| `health-prom` | `github.com/ubgo/health/contrib/health-prom` |
+| [`health-otel`](./contrib/health-otel) | `github.com/ubgo/health/contrib/health-otel` |
+| [`health-prom`](./contrib/health-prom) | `github.com/ubgo/health/contrib/health-prom` |
 
 ### Concrete checkers
 
 | Adapter | Module path |
 |---------|-------------|
-| `health-postgres` | `github.com/ubgo/health/contrib/health-postgres` |
-| `health-redis` | `github.com/ubgo/health/contrib/health-redis` |
-| `health-nats` | `github.com/ubgo/health/contrib/health-nats` |
-| `health-httpprobe` | `github.com/ubgo/health/contrib/health-httpprobe` |
-| `health-dns` | `github.com/ubgo/health/contrib/health-dns` |
+| [`health-postgres`](./contrib/health-postgres) | `github.com/ubgo/health/contrib/health-postgres` |
+| [`health-redis`](./contrib/health-redis) | `github.com/ubgo/health/contrib/health-redis` |
+| [`health-nats`](./contrib/health-nats) | `github.com/ubgo/health/contrib/health-nats` |
+| [`health-httpprobe`](./contrib/health-httpprobe) | `github.com/ubgo/health/contrib/health-httpprobe` |
+| [`health-dns`](./contrib/health-dns) | `github.com/ubgo/health/contrib/health-dns` |
 
-Adapters land incrementally as the core stabilises.
+Click any adapter for its dedicated README with install, quick start, middleware, and API tables. All twelve adapters ship in v0.1.0.
 
 ## Compatibility
 
