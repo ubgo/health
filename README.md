@@ -140,6 +140,119 @@ reg.Subscribe(func(name string, r health.Result) {
 })
 ```
 
+## Composing checker + renderer + observer
+
+A production wiring brings all three roles together. The example below uses Postgres + Redis as critical checkers, Slack as a degraded fallback, OTEL as the observer, and Gin as the renderer:
+
+```go
+import (
+    "context"
+    "time"
+
+    "github.com/ubgo/health"
+    healthgin       "github.com/ubgo/health/contrib/health-gin"
+    healthhttpprobe "github.com/ubgo/health/contrib/health-httpprobe"
+    healthotel      "github.com/ubgo/health/contrib/health-otel"
+    healthpostgres  "github.com/ubgo/health/contrib/health-postgres"
+    healthredis     "github.com/ubgo/health/contrib/health-redis"
+
+    "github.com/gin-gonic/gin"
+    "go.opentelemetry.io/otel"
+)
+
+func main() {
+    reg := health.NewRegistry()
+
+    // 1. CHECKERS — write Result to the registry on a schedule.
+    reg.Register(healthpostgres.New("db", pgxPool))
+    reg.Register(healthredis.New("cache", redisClient))
+    reg.Register(
+        healthhttpprobe.New("slack-webhook", "https://hooks.slack.com/.../health"),
+        health.WithSeverity(health.SeverityDegraded), // Slack down ≠ readiness fail
+    )
+
+    // 2. OBSERVER — emit OTEL span on every check result.
+    healthotel.Register(reg, healthotel.WithTracer(otel.Tracer("health")))
+
+    // 3. RENDERER — expose /healthz, /readyz, /startupz.
+    r := gin.Default()
+    healthgin.Mount(r, reg)
+
+    // Background check loop — every 30s.
+    ctx := context.Background()
+    reg.Start(ctx, 30*time.Second)
+    defer reg.Stop()
+
+    _ = r.Run(":8080")
+}
+```
+
+Now `curl /readyz` returns 503 when the DB or cache is down (critical), but stays at 200 when only Slack is unreachable (degraded). Every result fires an OTEL span you can correlate with the application's request traces.
+
+## Real-world: Kubernetes deployment
+
+Map the three probes onto k8s:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-service
+spec:
+  template:
+    spec:
+      containers:
+        - name: app
+          ports:
+            - name: http
+              containerPort: 8080
+
+          # /healthz — process is alive. Used by k8s to restart the pod.
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            periodSeconds: 10
+            failureThreshold: 3
+
+          # /readyz — process is ready to serve. Used by the Service /
+          # load balancer to add/remove the pod from the rotation.
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
+            periodSeconds: 2
+            failureThreshold: 1
+
+          # /startupz — process has finished initialising. Replaces the
+          # liveness probe during startup so a slow boot doesn't trigger
+          # a restart loop.
+          startupProbe:
+            httpGet:
+              path: /startupz
+              port: 8080
+            periodSeconds: 5
+            failureThreshold: 30   # 30 × 5s = 150s startup budget
+```
+
+Tune the probe periods to match your check `WithTimeout` and the registry's `Start(ctx, interval)` cadence — kubelet doesn't gain anything from polling faster than your checks update.
+
+For the matching SIGTERM-side drain (load balancer drains pod *before* listener closes), pair this with [`ubgo/shutdown`](https://github.com/ubgo/shutdown) and use its `PhasePreShutdown` phase to flip readiness off.
+
+## Comparison
+
+| Feature | `alexliesenfeld/health` | `hellofresh/health-go` | `heptiolabs/healthcheck` | **`ubgo/health`** |
+|---|:---:|:---:|:---:|:---:|
+| Liveness / Readiness / Startup split | partial | ❌ | ❌ | **✅** |
+| Per-check `Severity` (critical / degraded / info) | ❌ | ❌ | ❌ | **✅** |
+| Background re-check on a schedule | ✅ | ❌ | ✅ | **✅** |
+| Observer pattern (no polling) | ❌ | ❌ | ❌ | **✅** |
+| OpenTelemetry adapter | ❌ | ❌ | ❌ | **✅ (contrib)** |
+| Prometheus adapter | ❌ | ❌ | ❌ | **✅ (contrib)** |
+| Concrete checkers (Postgres / Redis / NATS / DNS / HTTP) | ❌ | bundled in core | ❌ | **✅ (contrib, opt-in)** |
+| Per-framework adapter (Gin / Chi / Echo / Fiber) | ❌ | ❌ | ❌ | **✅ (contrib)** |
+| Zero-dep core | ✅ | ❌ (pulls every checker) | ✅ | **✅** |
+
 ## Adapters
 
 Adapter modules ship as separate Go modules under `contrib/`. Import only the ones you use; each pulls in its own dependencies.
